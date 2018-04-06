@@ -252,6 +252,12 @@ public:
     std::shared_ptr<Response> post(const char* path, const Params& params);
     std::shared_ptr<Response> post(const char* path, const Headers& headers, const Params& params);
 
+    std::shared_ptr<Response> put(const char* path, const std::string& body, const char* content_type);
+    std::shared_ptr<Response> put(const char* path, const Headers& headers, const std::string& body, const char* content_type);
+
+    std::shared_ptr<Response> put(const char* path, const Params& params);
+    std::shared_ptr<Response> put(const char* path, const Headers& headers, const Params& params);
+
     bool send(Request& req, Response& res);
 
 protected:
@@ -1898,6 +1904,55 @@ inline std::shared_ptr<Response> Client::post(const char* path, const Headers& h
     }
 
     return post(path, headers, query, "application/x-www-form-urlencoded");
+}
+
+
+
+
+
+
+
+
+inline std::shared_ptr<Response> Client::put(
+  const char* path, const std::string& body, const char* content_type)
+{
+  return put(path, Headers(), body, content_type);
+}
+
+inline std::shared_ptr<Response> Client::put(
+  const char* path, const Headers& headers, const std::string& body, const char* content_type)
+{
+  Request req;
+  req.method = "PUT";
+  req.headers = headers;
+  req.path = path;
+
+  req.headers.emplace("Content-Type", content_type);
+  req.body = body;
+
+  auto res = std::make_shared<Response>();
+
+  return send(req, *res) ? res : nullptr;
+}
+
+inline std::shared_ptr<Response> Client::put(const char* path, const Params& params)
+{
+  return put(path, Headers(), params);
+}
+
+inline std::shared_ptr<Response> Client::put(const char* path, const Headers& headers, const Params& params)
+{
+  std::string query;
+  for (auto it = params.begin(); it != params.end(); ++it) {
+    if (it != params.begin()) {
+      query += "&";
+    }
+    query += it->first;
+    query += "=";
+    query += it->second;
+  }
+
+  return put(path, headers, query, "application/x-www-form-urlencoded");
 }
 
 /*
